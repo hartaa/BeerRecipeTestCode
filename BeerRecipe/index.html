@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" type="text/css" href="MainStyle.css">
+    <title>Beer Recipe</title>
+</head>
+<body>
+
+    <div id="mainDiv">
+        <div class="column">
+            <h2>Ingredients</h2>
+            <input id="ingredientSearch" placeholder="Search" type="search" />
+            <input id="ingredientAddId" type="button" value="Add Ingredient" />
+            <ul id="ingredients" class="ingredientsList"></ul>
+        </div>
+        <div class="column">
+            <h2>New Recipe</h2>
+            <input id="recipeAdd" type="button" value="Add Recipe" />
+            <input id="recipeName" placeholder="Name" type="text" />
+            <ul id="recipe" class="ingredientsList"></ul>
+        </div>
+        <div class="column">
+            <h2>Recipes</h2>
+            <ul id="recipeList" class="ingredientsList"></ul>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="/Scripts/json2.js"></script>
+    <script type="text/javascript" src="/Scripts/underscore.js"></script>
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>
+    <script type="text/javascript" src="/Scripts/backbone-min.js"></script>
+
+    <script>
+        var uri = 'api/ingredients';
+        var recipeUri = 'api/recipe';
+
+        $(document).ready(function () {
+            getAllIngredients();
+            getAllRecipes();
+            $('#ingredientSearch').on('keyup', function () {
+                find();
+            });
+            $('#ingredientAddId').on('click', postIngredient);
+            $('#ingredients').on('dblclick', function (e) {
+                var target = e.target;
+                if (target.nodeName === 'LI') {
+                    $('#recipe').append($(target).clone());
+                }
+            });
+            $('#recipeAdd').on('click', postRecipe);
+        });
+
+        function getAllIngredients() {
+            //Clear li elements if they exist so we don't get dups
+            $('#ingredients').empty();
+
+            // Send an AJAX request
+            $.getJSON(uri)
+                .done(function (data) {
+                    // On success, 'data' contains a list of ingredients.
+                    $.each(data, function (key, item) {
+                        // Add a list item for the ingredients.
+                        $('<li>', { text: formatItem(item) }).appendTo($('#ingredients'));
+                    });
+                });
+        }
+
+        function getAllRecipes() {
+            //Clear li elements if they exist so we don't get dups
+            $('#recipeList').empty();
+
+            // Send an AJAX request
+            $.getJSON(recipeUri)
+                .done(function (data) {
+                    // On success, 'data' contains a list of ingredients.
+                    $.each(data, function (key, item) {
+                        // Add a list item for the ingredients.
+                        $('<li>', { text: formatItem(item) }).appendTo($('#recipeList'));
+                    });
+                });
+        }
+
+        function postIngredient() {
+            var name = $('#ingredientSearch').val();
+            var ingredient = { 'Name': name };
+            $.ajax({
+                type: "POST",
+                url: uri,
+                data: ingredient,
+                dataType: 'json'
+            })
+                .done(function () {
+                    $('#ingredientAddResult').text(name + ' successfully added');
+                    getAllIngredients();
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    $('#ingredientAddResult').text('Error: ' + err);
+                });;
+        }
+
+        function postRecipe() {
+            var recipeName = $('#recipeName').val();
+            var recipe = new Object();
+            recipe.Name = recipeName;
+            var ingredients = [];
+            $('#recipe li').each(function () {
+                var ingredient = $(this).text();
+                ingredients.push(ingredient);
+                $(this).text("List item " + ingredient);
+            });
+            recipe.Ingredients = ingredients;
+
+            var recipeString = JSON.stringify(recipe);
+            //console.log(recipeString);
+            $.ajax({
+                type: "POST",
+                url: recipeUri,
+                data: recipe,
+                dataType: 'json'
+            })
+                .done(function (data) {
+                    $('#recipeName').text('');
+                    $('#recipe').empty();
+                    $('#recipeList').empty();
+                    getAllRecipes();
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    $('#ingredientAddResult').text('Error: ' + err);
+                });;
+        }
+
+        function formatItem(item) {
+            return item.Name; // + ': ' + item.Id;
+        }
+
+
+        function find() {
+            var query = $('#ingredientSearch').val();
+            if (query === '') {
+                getAllIngredients();
+            }
+            else {
+                $.getJSON(uri + '/' + query)
+                .done(function (data) {
+                    $('#ingredients').empty();
+                    $.each(data, function (key, item) {
+                        // Add a list item for the ingredients.
+                        $('<li>', { text: formatItem(item) }).appendTo($('#ingredients'));
+                    });
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    $('#ingredient').text('Error: ' + err);
+                });
+            }
+        }
+    </script>
+
+    <!--<script>
+
+        Just playing around with backbone
+
+        $(document).ready(function () {
+            var IngredientModel = Backbone.Model.extend({
+                urlRoot: 'api/ingredients',
+                defaults: {
+                    Id: 'Defualt Id',
+                    Name: 'Default Name'
+                }
+
+            });
+
+            var IngredientCollection = Backbone.Collection.extend({
+                model: IngredientModel,
+                url: 'api/ingredients'
+            });
+
+            var ingredients = new IngredientCollection();
+            ingredients.fetch();
+
+            IngredientView = Backbone.View.extend({
+                model: IngredientModel,
+                el: $("#ingredientTemplate"),
+                initialize: function () {
+                    this.render();
+                },
+                render: function () {
+                    var that = this;
+                    _.each(ingredients.models, function (item) {
+                        that.renderIngredient(item);
+                    }, this);
+                },
+                renderIngredient: function (item) {
+                    var ingredientView = new IngredientView({
+                        model: item
+                    });
+                    this.$el.append(ingredientView.render().el);
+                }
+            });
+
+            var ingredientView = new IngredientView({ el: $("#ingredientTemplate") });
+        });
+    </script>-->
+
+</body>
+</html>

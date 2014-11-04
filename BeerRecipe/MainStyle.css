@@ -1,0 +1,49 @@
+﻿body {
+    background-color: #ccc;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+
+.ingredientsList {
+    position: relative;
+    padding:0; 
+    margin:0; 
+} 
+li {
+    padding:5px; 
+    color: black;
+    cursor: pointer;
+    width:100%;
+    list-style-type: none;
+    font-family:arial, verdana, sans-serif;
+    font-size:0.8em;
+    text-align:left;
+    text-decoration:none;
+} 
+
+.float-right {
+    float: right;
+}
+
+h2 {
+    width: 10em;
+    font-size: 30px;
+    color: black;
+}
+
+.column {
+    display: inline-block;
+    float: left;
+    width: 30%;
+}
